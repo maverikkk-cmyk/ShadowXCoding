@@ -6,8 +6,9 @@ db.run(`
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   username TEXT,
-  plan TEXT DEFAULT 'free',
-  role TEXT DEFAULT 'user'
+  password TEXT,
+  role TEXT DEFAULT 'user',
+  plan TEXT DEFAULT 'free'
 );
 `);
 
