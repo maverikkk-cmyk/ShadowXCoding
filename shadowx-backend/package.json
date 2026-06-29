@@ -1,5 +1,5 @@
-1{
-  "name": "shadowx-backend",
+{
+  "name": "shadowx",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
