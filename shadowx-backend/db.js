@@ -12,4 +12,14 @@ CREATE TABLE IF NOT EXISTS users (
 );
 `);
 
+db.run(`
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT,
+  plan TEXT DEFAULT 'free',
+  ai_limit INTEGER DEFAULT 20,
+  used INTEGER DEFAULT 0
+);
+`);
+
 module.exports = db;
