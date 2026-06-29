@@ -1,42 +1,60 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
+
 const db = require("./db");
+const { auth, isAdmin, isSuperAdmin, SECRET } = require("./auth");
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-const SECRET = "shadowx_secret";
-
-// TEST ROUTE
 app.get("/", (req, res) => {
-  res.json({ status: "Backend live 🚀" });
+  res.json({ status: "ShadowX backend running 🚀" });
 });
 
-// LOGIN
+
+// 👤 REGISTER (test)
+app.post("/register", (req, res) => {
+  const { username, password } = req.body;
+
+  db.run(
+    "INSERT INTO users(username,password) VALUES(?,?)",
+    [username, password]
+  );
+
+  res.json({ msg: "User created" });
+});
+
+
+// 🔐 LOGIN
 app.post("/login", (req, res) => {
-  const { username } = req.body;
+  const { username, password } = req.body;
 
-  const token = jwt.sign({ username }, SECRET);
+  db.get(
+    "SELECT * FROM users WHERE username=? AND password=?",
+    [username, password],
+    (err, user) => {
+      if (!user) return res.json({ error: "Invalid login" });
 
-  db.run("INSERT INTO users(username) VALUES (?)", [username]);
+      const token = jwt.sign(
+        {
+          username: user.username,
+          role: user.role,
+          plan: user.plan
+        },
+        SECRET,
+        { expiresIn: "1h" }
+      );
 
-  res.json({ token });
+      res.json({ token });
+    }
+  );
 });
 
-// AUTH MIDDLEWARE
-function auth(req, res, next) {
-  try {
-    const token = req.headers.authorization.split(" ")[1];
-    req.user = jwt.verify(token, SECRET);
-    next();
-  } catch {
-    res.status(401).json({ error: "unauthorized" });
-  }
-}
 
-// GET USER
+// 👤 USER INFO
 app.get("/me", auth, (req, res) => {
   db.get(
     "SELECT * FROM users WHERE username=?",
@@ -47,7 +65,8 @@ app.get("/me", auth, (req, res) => {
   );
 });
 
-// UPGRADE PLAN
+
+// 💎 UPGRADE PLAN
 app.post("/upgrade", auth, (req, res) => {
   const { plan } = req.body;
 
@@ -56,9 +75,23 @@ app.post("/upgrade", auth, (req, res) => {
     [plan, req.user.username]
   );
 
-  res.json({ success: true });
+  res.json({ msg: "Plan updated" });
 });
 
+
+// 👑 ADMIN PANEL
+app.get("/admin", auth, isAdmin, (req, res) => {
+  res.json({ msg: "Admin panel access granted ⚙️" });
+});
+
+
+// 🚀 SUPER ADMIN TEST
+app.get("/super", auth, isSuperAdmin, (req, res) => {
+  res.json({ msg: "Super admin 👑" });
+});
+
+
+// START
 app.listen(process.env.PORT || 3000, () => {
-  console.log("Server running 🚀");
+  console.log("Backend running 🚀");
 });
