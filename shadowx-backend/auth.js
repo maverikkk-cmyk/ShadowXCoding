@@ -1,40 +1,23 @@
 const jwt = require("jsonwebtoken");
-
 const SECRET = "shadowx_secret";
 
-// AUTH CHECK
 function auth(req, res, next) {
-  const header = req.headers.authorization;
-
-  if (!header) {
-    return res.status(401).json({ error: "No token" });
-  }
-
-  const token = header.split(" ")[1];
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.json({ error: "No token" });
 
   try {
-    const decoded = jwt.verify(token, SECRET);
-    req.user = decoded;
+    req.user = jwt.verify(token, SECRET);
     next();
   } catch {
-    return res.status(401).json({ error: "Invalid token" });
+    res.json({ error: "Invalid token" });
   }
 }
 
-// ADMIN CHECK
 function isAdmin(req, res, next) {
   if (req.user.role !== "admin" && req.user.role !== "superadmin") {
-    return res.status(403).json({ error: "Admin only" });
+    return res.json({ error: "Admin only" });
   }
   next();
 }
 
-// SUPER ADMIN CHECK
-function isSuperAdmin(req, res, next) {
-  if (req.user.role !== "superadmin") {
-    return res.status(403).json({ error: "Super admin only" });
-  }
-  next();
-}
-
-module.exports = { auth, isAdmin, isSuperAdmin, SECRET };
+module.exports = { auth, isAdmin, SECRET };
